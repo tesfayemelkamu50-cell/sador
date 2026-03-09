@@ -8,33 +8,23 @@
     <style>
         :root { --gold: #fbbf24; --neon: #22ff88; --ice: #38bdf8; --royal: #f43f5e; --panel: #11161e; --bg: #0a0c0f; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { margin: 0; background: var(--bg); color: #eee; height: 100vh; display: flex; flex-direction: column; padding: 8px; overflow: hidden; }
-        
+        body { margin: 0; background: var(--bg); color: #eee; height: 100vh; display: flex; flex-direction: column; padding: 8px; }
         .top-bar { background: var(--panel); border-radius: 2rem; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2a303c; margin-bottom: 10px; }
         .logo { font-weight: 900; font-size: 1.5rem; background: linear-gradient(45deg, var(--gold), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .timer { font-family: monospace; font-size: 2.2rem; font-weight: 800; border: 2px solid var(--neon); padding: 2px 15px; border-radius: 40px; color: var(--neon); }
-
         .game-area { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .card-grid { flex: 1; background: #0b0e14; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
-        
-        .game-card { background: #10161e; border-radius: 12px; display: grid; grid-template-columns: 40px 60px 1fr 70px; align-items: center; height: 70px; position: relative; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
-        .game-card:hover { border-color: var(--ice); }
-        .card-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-left: 8px; border: 2px solid #333; }
+        .game-card { background: #10161e; border-radius: 12px; display: grid; grid-template-columns: 40px 60px 1fr 70px; align-items: center; height: 70px; position: relative; cursor: pointer; border: 1px solid #222; }
+        .card-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-left: 8px; }
         .card-odds { font-size: 1.6rem; font-weight: 900; color: var(--gold); text-align: center; }
-
         .stake-panel { position: absolute; inset: 0; background: rgba(0,0,0,0.95); border-radius: 12px; display: none; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; z-index: 5; }
-        .stake-btn { display: flex; align-items: center; justify-content: center; background: #222; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.8rem; border: 1px solid #444; }
-        .stake-btn:active { background: var(--ice); color: #000; }
-        
+        .stake-btn { display: flex; align-items: center; justify-content: center; background: #222; border-radius: 8px; font-weight: 800; cursor: pointer; }
         .sidebar { width: 300px; background: #0c111a; border-radius: 20px; padding: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #222; }
-        .profile-card { background: #111827; border-radius: 15px; padding: 15px; text-align: center; border: 1px solid #1f2937; }
         .balance { font-size: 2.2rem; font-weight: 900; color: var(--neon); margin: 5px 0; }
-        
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: #111827; width: 320px; border-radius: 20px; padding: 20px; border: 1px solid var(--ice); }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; background: #1f2a37; border: 1px solid #333; color: white; }
-        .main-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; background: var(--ice); transition: 0.2s; }
-        .main-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .main-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; background: var(--ice); color: #000; }
     </style>
 </head>
 <body>
@@ -42,144 +32,90 @@
 <div class="top-bar">
     <div class="logo">FIZZY 6 ROYAL</div>
     <div class="timer" id="timerDisplay">03:00</div>
-    <div id="uName" style="color:var(--ice); font-weight:bold;">GUEST</div>
 </div>
 
 <div class="game-area">
     <div class="card-grid" id="grid"></div>
     <div class="sidebar">
-        <div class="profile-card">
+        <div class="profile-card" style="text-align:center;">
+            <div id="uPhone" style="color:var(--ice); font-weight:bold;">GUEST</div>
             <div class="balance" id="uBal">0.00</div>
             <div id="authBox">
                 <button class="main-btn" onclick="openM('regM')">SIGN UP</button>
                 <button class="main-btn" style="margin-top:5px; background:#333; color:#fff;" onclick="openM('logM')">LOGIN</button>
             </div>
             <div id="userBox" style="display:none;">
-                <button class="main-btn" style="background:var(--neon); color:#000" onclick="openM('depM')">DEPOSIT</button>
-                <button class="main-btn" style="margin-top:5px; background:transparent; color:#666" onclick="handleLogout()">LOGOUT</button>
+                <button class="main-btn" style="background:var(--neon)" onclick="openM('depM')">DEPOSIT</button>
+                <button class="main-btn" style="margin-top:10px; background:transparent; color:#666" onclick="handleLogout()">LOGOUT</button>
             </div>
+        </div>
+        <div id="adminPanel" style="display:none; background:#000; padding:10px; border-radius:10px; border:1px solid var(--royal)">
+            <h5 style="color:var(--royal); margin:0">👑 ADMIN PANEL</h5>
+            <button class="main-btn" onclick="triggerResult()" style="background:var(--gold); margin-top:10px;">PICK WINNER</button>
         </div>
     </div>
 </div>
 
-<div id="regM" class="modal"><div class="modal-content"><h3>SIGN UP</h3><input id="rE" placeholder="Email"><input type="password" id="rP" placeholder="Password"><button class="main-btn" onclick="handleAuth('up')">CREATE ACCOUNT</button></div></div>
-<div id="logM" class="modal"><div class="modal-content"><h3>LOGIN</h3><input id="lE" placeholder="Email"><input type="password" id="lP" placeholder="Password"><button class="main-btn" onclick="handleAuth('in')">ENTER</button></div></div>
-<div id="depM" class="modal"><div class="modal-content"><h3>DEPOSIT</h3><p style="font-size:0.8rem">Send funds and upload screenshot.</p><input type="number" id="dA" placeholder="Amount"><input type="file" id="dF"><button class="main-btn" onclick="handleDeposit()">SUBMIT</button></div></div>
+<div id="regM" class="modal"><div class="modal-content"><h3>SIGN UP</h3><input id="rPh" placeholder="Phone (+123...)"><input type="password" id="rP" placeholder="Password"><button class="main-btn" onclick="handlePhoneAuth('up')">JOIN</button></div></div>
+<div id="logM" class="modal"><div class="modal-content"><h3>LOGIN</h3><input id="lPh" placeholder="Phone (+123...)"><input type="password" id="lP" placeholder="Password"><button class="main-btn" onclick="handlePhoneAuth('in')">ENTER</button></div></div>
+<div id="depM" class="modal"><div class="modal-content"><h3>DEPOSIT</h3><input type="number" id="dA" placeholder="Amount"><input type="file" id="dF"><button class="main-btn" onclick="handleDeposit()">SUBMIT</button></div></div>
 
 <script>
-    // 1. CONFIGURATION (Replace with your own Supabase credentials)
-    const SUPABASE_URL = 'https://nvcsmpfaxqfhidneiuqi.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52Y3NtcGZheHFmaGlkbmVpdXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNTQwNzcsImV4cCI6MjA4ODYzMDA3N30.Xn77k7X2UGf3WuCDmFunIRybm0V4RbyCMPhs6zi6wvA';
-    const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const _sb = supabase.createClient('https://nvcsmpfaxqfhidneiuqi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52Y3NtcGZheHFmaGlkbmVpdXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNTQwNzcsImV4cCI6MjA4ODYzMDA3N30.Xn77k7X2UGf3WuCDmFunIRybm0V4RbyCMPhs6zi6wvA');
+    const LADIES = [{id:1,name:"Rihanna",img:"https://images.pexels.com/photos/2811088/pexels-photo-2811088.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:2,name:"Beyoncé",img:"https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:3,name:"Shakira",img:"https://images.pexels.com/photos/3767394/pexels-photo-3767394.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:4,name:"Nicki",img:"https://images.pexels.com/photos/2690323/pexels-photo-2690323.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:5,name:"Cardi B",img:"https://images.pexels.com/photos/2774197/pexels-photo-2774197.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:6,name:"Megan",img:"https://images.pexels.com/photos/2100063/pexels-photo-2100063.jpeg?auto=compress&cs=tinysrgb&w=150"}];
+    let user = null, odds = {}, timer = 180;
 
-    const LADIES = [
-        {id:1,name:"Rihanna",img:"https://images.pexels.com/photos/2811088/pexels-photo-2811088.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:2,name:"Beyoncé",img:"https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:3,name:"Shakira",img:"https://images.pexels.com/photos/3767394/pexels-photo-3767394.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:4,name:"Nicki",img:"https://images.pexels.com/photos/2690323/pexels-photo-2690323.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:5,name:"Cardi B",img:"https://images.pexels.com/photos/2774197/pexels-photo-2774197.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:6,name:"Megan",img:"https://images.pexels.com/photos/2100063/pexels-photo-2100063.jpeg?auto=compress&cs=tinysrgb&w=150"}
-    ];
-
-    let user = null;
-    let odds = {};
-    let timer = 180;
-
-    // 2. AUTHENTICATION
-    async function handleAuth(type) {
-        const email = type === 'up' ? document.getElementById('rE').value : document.getElementById('lE').value;
+    async function handlePhoneAuth(type) {
+        let phone = type === 'up' ? document.getElementById('rPh').value : document.getElementById('lPh').value;
         const pass = type === 'up' ? document.getElementById('rP').value : document.getElementById('lP').value;
-        
-        const { data, error } = type === 'up' 
-            ? await _sb.auth.signUp({ email, password }) 
-            : await _sb.auth.signInWithPassword({ email, password });
-
-        if (error) return alert(error.message);
-        checkUser();
-        closeM();
+        if(!phone.startsWith('+')) phone = '+' + phone;
+        const { error } = type === 'up' ? await _sb.auth.signUp({phone, password:pass}) : await _sb.auth.signInWithPassword({phone, password:pass});
+        if(error) alert(error.message); else checkUser(); closeM();
     }
 
     async function checkUser() {
         const { data: { session } } = await _sb.auth.getSession();
-        if (session) {
-            const { data: profile } = await _sb.from('profiles').select('*').eq('id', session.user.id).single();
-            user = { ...session.user, ...profile };
-            updateUI();
-            subscribeToProfile();
+        if(session) {
+            const { data: prof } = await _sb.from('profiles').select('*').eq('id', session.user.id).single();
+            user = prof;
+            document.getElementById('uPhone').innerText = user.phone;
+            document.getElementById('uBal').innerText = user.balance;
+            document.getElementById('authBox').style.display = 'none';
+            document.getElementById('userBox').style.display = 'block';
+            if(user.is_admin) document.getElementById('adminPanel').style.display = 'block';
+            _sb.channel('p').on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:`id=eq.${user.id}`},p=>document.getElementById('uBal').innerText = p.new.balance).subscribe();
         }
     }
 
-    function updateUI() {
-        if (!user) return;
-        document.getElementById('uName').innerText = user.email.split('@')[0].toUpperCase();
-        document.getElementById('uBal').innerText = parseFloat(user.balance).toFixed(2);
-        document.getElementById('authBox').style.display = 'none';
-        document.getElementById('userBox').style.display = 'block';
-    }
-
-    function subscribeToProfile() {
-        _sb.channel('any').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, payload => {
-            document.getElementById('uBal').innerText = parseFloat(payload.new.balance).toFixed(2);
-        }).subscribe();
-    }
-
-    // 3. GAME LOGIC
     async function placeBet(lid, amt) {
-        if (!user) return alert("Login first!");
-        
-        // Call the SQL function we created earlier
-        const { error } = await _sb.rpc('place_bet_secure', {
-            l_id: lid,
-            l_odds: odds[lid],
-            l_amt: amt
-        });
-
-        if (error) alert(error.message);
-        else hideS(lid);
+        const { error } = await _sb.rpc('place_bet_secure', { l_id: lid, l_odds: odds[lid], l_amt: amt });
+        if(error) alert(error.message); else hideS(lid);
     }
 
-    function renderCards() {
-        let html = '';
+    async function triggerResult() {
+        const winId = Math.floor(Math.random()*6)+1;
+        await _sb.rpc('process_winner', { winning_lady_id: winId });
+        alert("Winner: " + LADIES.find(l=>l.id===winId).name);
+        timer = 180; render();
+    }
+
+    function render() {
+        let h = '';
         LADIES.forEach(l => {
             odds[l.id] = (Math.random() * 2 + 1.8).toFixed(1);
-            html += `
-            <div class="game-card" onclick="showS(${l.id})">
-                <div style="font-size:0.6rem;text-align:center;color:#444">${l.id}</div>
-                <img src="${l.img}" class="card-img">
-                <div style="font-weight:bold; padding-left:10px">${l.name}</div>
-                <div class="card-odds">${odds[l.id]}</div>
-                <div class="stake-panel" id="s-${l.id}">
-                    <div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},10)">$10</div>
-                    <div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},50)">$50</div>
-                    <div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},100)">$100</div>
-                    <div class="stake-btn" onclick="event.stopPropagation();hideS(${l.id})" style="color:var(--royal)">X</div>
-                </div>
-            </div>`;
+            h += `<div class="game-card" onclick="showS(${l.id})"><div style="font-size:0.6rem;text-align:center">${l.id}</div><img src="${l.img}" class="card-img"><div style="font-weight:bold;padding-left:10px">${l.name}</div><div class="card-odds">${odds[l.id]}</div><div class="stake-panel" id="s-${l.id}"><div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},10)">10</div><div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},50)">50</div><div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},100)">100</div><div class="stake-btn" onclick="event.stopPropagation();hideS(${l.id})" style="color:red">X</div></div></div>`;
         });
-        document.getElementById('grid').innerHTML = html;
+        document.getElementById('grid').innerHTML = h;
     }
 
-    // 4. UTILS
     function openM(id){document.getElementById(id).style.display='flex'}
     function closeM(){document.querySelectorAll('.modal').forEach(m=>m.style.display='none')}
     function showS(id){document.getElementById('s-'+id).style.display='grid'}
     function hideS(id){document.getElementById('s-'+id).style.display='none'}
     async function handleLogout() { await _sb.auth.signOut(); location.reload(); }
 
-    // Init
-    renderCards();
-    checkUser();
-
-    setInterval(() => {
-        if(timer > 0) {
-            timer--;
-            let m=Math.floor(timer/60), s=timer%60;
-            document.getElementById('timerDisplay').innerText=`${m}:${s<10?'0':''}${s}`;
-        } else {
-            timer = 180;
-            renderCards(); // Refresh odds for new round
-        }
-    }, 1000);
+    setInterval(() => { if(timer > 0) { timer--; let m=Math.floor(timer/60), s=timer%60; document.getElementById('timerDisplay').innerText=`${m}:${s<10?'0':''}${s}`; }}, 1000);
+    render(); checkUser();
 </script>
 </body>
 </html>
