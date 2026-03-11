@@ -109,7 +109,6 @@
 
     let user = null, odds = {}, timer = 180;
 
-    // --- AUTHENTICATION ---
     async function handleAuth(type) {
         const email = type === 'up' ? document.getElementById('rEm').value : document.getElementById('lEm').value;
         const pass = type === 'up' ? document.getElementById('rP').value : document.getElementById('lP').value;
@@ -143,7 +142,6 @@
         }
     }
 
-    // --- GAME LOGIC ---
     async function placeBet(lid, amt) {
         if (!user) return openM('logM');
         const { error } = await _sb.rpc('place_bet_secure', { l_id: lid, l_odds: odds[lid], l_amt: amt });
@@ -160,14 +158,12 @@
     async function handleDeposit() {
         const amt = document.getElementById('dA').value;
         const file = document.getElementById('dF').files[0];
-        if (!file || !amt) return alert("Fill all fields and upload proof!");
-        
+        if (!file || !amt) return alert("Fill all fields!");
         const path = `proofs/${user.id}_${Date.now()}`;
         await _sb.storage.from('screenshots').upload(path, file);
         const { data: { publicUrl } } = _sb.storage.from('screenshots').getPublicUrl(path);
-        
         await _sb.from('requests').insert([{ profile_id: user.id, email: user.email, amount: amt, proof_url: publicUrl }]);
-        alert("Request Sent!"); closeM();
+        alert("Deposit Request Sent!"); closeM();
     }
 
     function renderCards() {
@@ -190,7 +186,6 @@
         document.getElementById('grid').innerHTML = h;
     }
 
-    // --- UI UTILS ---
     function openM(id){ document.getElementById(id).style.display='flex'; }
     function closeM(){ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
     function showS(id){ document.getElementById('s-'+id).style.display='grid'; }
