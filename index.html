@@ -46,11 +46,11 @@
     <div class="card-grid" id="grid"></div>
     <div class="sidebar">
         <div class="profile-card" style="text-align:center;">
-            <div id="uPhone" style="color:var(--ice); font-weight:bold; font-size: 0.9rem;">GUEST</div>
+            <div id="uName" style="color:var(--ice); font-weight:bold; font-size: 0.9rem;">GUEST</div>
             <div class="balance" id="uBal">0.00</div>
             
             <div id="authBox">
-                <button class="main-btn" onclick="openM('regM')">JOIN NOW</button>
+                <button class="main-btn" onclick="openM('regM')">SIGN UP</button>
                 <button class="main-btn" style="margin-top:5px; background:#333; color:#fff;" onclick="openM('logM')">LOGIN</button>
             </div>
             
@@ -70,8 +70,8 @@
 <div id="regM" class="modal">
     <div class="modal-content">
         <h3>SIGN UP</h3>
-        <input id="rPh" placeholder="Phone (+234...)">
-        <input type="password" id="rP" placeholder="Password (min 6 chars)">
+        <input id="rEm" type="email" placeholder="Email Address">
+        <input id="rP" type="password" placeholder="Password (min 6 chars)">
         <button class="main-btn" onclick="handleAuth('up')">CREATE ACCOUNT</button>
     </div>
 </div>
@@ -79,8 +79,8 @@
 <div id="logM" class="modal">
     <div class="modal-content">
         <h3>LOGIN</h3>
-        <input id="lPh" placeholder="Phone (+234...)">
-        <input type="password" id="lP" placeholder="Password">
+        <input id="lEm" type="email" placeholder="Email Address">
+        <input id="lP" type="password" placeholder="Password">
         <button class="main-btn" onclick="handleAuth('in')">LOGIN</button>
     </div>
 </div>
@@ -111,16 +111,19 @@
 
     // --- AUTHENTICATION ---
     async function handleAuth(type) {
-        let phone = type === 'up' ? document.getElementById('rPh').value : document.getElementById('lPh').value;
+        const email = type === 'up' ? document.getElementById('rEm').value : document.getElementById('lEm').value;
         const pass = type === 'up' ? document.getElementById('rP').value : document.getElementById('lP').value;
 
-        if (!phone.startsWith('+')) phone = '+' + phone.replace(/\D/g,'');
-        
         const { data, error } = type === 'up' 
-            ? await _sb.auth.signUp({ phone, password: pass }) 
-            : await _sb.auth.signInWithPassword({ phone, password: pass });
+            ? await _sb.auth.signUp({ email, password: pass }) 
+            : await _sb.auth.signInWithPassword({ email, password: pass });
 
-        if (error) alert(error.message); else { checkUser(); closeM(); }
+        if (error) alert(error.message); 
+        else { 
+            if(type === 'up') alert("Signup successful! Login to continue.");
+            checkUser(); 
+            closeM(); 
+        }
     }
 
     async function checkUser() {
@@ -128,7 +131,7 @@
         if (session) {
             const { data: prof } = await _sb.from('profiles').select('*').eq('id', session.user.id).single();
             user = prof;
-            document.getElementById('uPhone').innerText = user.phone;
+            document.getElementById('uName').innerText = user.email.split('@')[0].toUpperCase();
             document.getElementById('uBal').innerText = parseFloat(user.balance).toFixed(2);
             document.getElementById('authBox').style.display = 'none';
             document.getElementById('userBox').style.display = 'block';
@@ -157,13 +160,13 @@
     async function handleDeposit() {
         const amt = document.getElementById('dA').value;
         const file = document.getElementById('dF').files[0];
-        if (!file) return alert("Upload proof!");
+        if (!file || !amt) return alert("Fill all fields and upload proof!");
         
         const path = `proofs/${user.id}_${Date.now()}`;
         await _sb.storage.from('screenshots').upload(path, file);
         const { data: { publicUrl } } = _sb.storage.from('screenshots').getPublicUrl(path);
         
-        await _sb.from('requests').insert([{ profile_id: user.id, phone: user.phone, amount: amt, proof_url: publicUrl }]);
+        await _sb.from('requests').insert([{ profile_id: user.id, email: user.email, amount: amt, proof_url: publicUrl }]);
         alert("Request Sent!"); closeM();
     }
 
