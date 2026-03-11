@@ -9,30 +9,26 @@
         :root { --gold: #fbbf24; --neon: #22ff88; --ice: #38bdf8; --royal: #f43f5e; --panel: #11161e; --bg: #0a0c0f; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { margin: 0; background: var(--bg); color: #eee; height: 100vh; display: flex; flex-direction: column; padding: 8px; overflow: hidden; }
-        
         .top-bar { background: var(--panel); border-radius: 2rem; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2a303c; margin-bottom: 10px; }
         .logo { font-weight: 900; font-size: 1.2rem; background: linear-gradient(45deg, var(--gold), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .timer { font-family: monospace; font-size: 2rem; font-weight: 800; border: 2px solid var(--neon); padding: 2px 15px; border-radius: 40px; color: var(--neon); }
-
         .game-area { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .card-grid { flex: 1; background: #0b0e14; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
-        
-        .game-card { background: #10161e; border-radius: 12px; display: grid; grid-template-columns: 40px 60px 1fr 70px; align-items: center; height: 70px; position: relative; cursor: pointer; border: 1px solid #222; }
+        .game-card { background: #10161e; border-radius: 12px; display: grid; grid-template-columns: 40px 60px 1fr 70px; align-items: center; height: 70px; position: relative; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
+        .game-card:hover { border-color: var(--ice); }
         .card-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-left: 8px; border: 2px solid #333; }
         .card-odds { font-size: 1.5rem; font-weight: 900; color: var(--gold); text-align: center; }
-
         .stake-panel { position: absolute; inset: 0; background: rgba(0,0,0,0.95); border-radius: 12px; display: none; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; z-index: 5; }
         .stake-btn { display: flex; align-items: center; justify-content: center; background: #222; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.8rem; }
-        
-        .sidebar { width: 300px; background: #0c111a; border-radius: 20px; padding: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #222; }
+        .sidebar { width: 300px; background: #0c111a; border-radius: 20px; padding: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #222; overflow-y: auto; }
         .balance { font-size: 2.2rem; font-weight: 900; color: var(--neon); margin: 5px 0; }
-        
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 100; }
         .modal-content { background: #111827; width: 320px; border-radius: 20px; padding: 20px; border: 1px solid var(--ice); }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; background: #1f2a37; border: 1px solid #333; color: white; outline: none; }
         .main-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; background: var(--ice); color: #000; }
-        
-        #adminPanel { background: #000; border: 1px solid var(--royal); border-radius: 12px; padding: 10px; margin-top: 10px; display: none; }
+        #adminPanel { background: #000; border: 1px solid var(--royal); border-radius: 12px; padding: 12px; margin-top: 10px; display: none; }
+        .admin-section-title { font-size: 0.7rem; color: #666; text-transform: uppercase; margin-top: 10px; }
+        .list-item { font-size: 0.8rem; padding: 5px 0; border-bottom: 1px solid #111; }
     </style>
 </head>
 <body>
@@ -48,12 +44,10 @@
         <div class="profile-card" style="text-align:center;">
             <div id="uName" style="color:var(--ice); font-weight:bold; font-size: 0.9rem;">GUEST</div>
             <div class="balance" id="uBal">0.00</div>
-            
             <div id="authBox">
                 <button class="main-btn" onclick="openM('regM')">SIGN UP</button>
                 <button class="main-btn" style="margin-top:5px; background:#333; color:#fff;" onclick="openM('logM')">LOGIN</button>
             </div>
-            
             <div id="userBox" style="display:none;">
                 <button class="main-btn" style="background:var(--neon)" onclick="openM('depM')">DEPOSIT</button>
                 <button class="main-btn" style="margin-top:10px; background:transparent; color:#666; font-size: 0.7rem;" onclick="handleLogout()">LOGOUT</button>
@@ -61,68 +55,34 @@
         </div>
 
         <div id="adminPanel">
-            <h5 style="color:var(--royal); margin:0 0 10px 0; text-align:center;">👑 SYSTEM ADMIN</h5>
-            <button class="main-btn" onclick="triggerResult()" style="background:var(--gold)">DRAW WINNER</button>
+            <h4 style="color:var(--royal); margin:0 0 10px 0; text-align:center;">👑 ADMIN CONSOLE</h4>
+            <button class="main-btn" onclick="triggerResult()" style="background:var(--gold); color:#000;">DRAW WINNER</button>
+            
+            <div class="admin-section-title">Pending Deposits</div>
+            <div id="adminReqList" style="max-height:120px; overflow-y:auto; margin-bottom:10px;"></div>
+            
+            <div class="admin-section-title">User Balances</div>
+            <div id="adminUserList" style="max-height:150px; overflow-y:auto;"></div>
         </div>
     </div>
 </div>
 
-<div id="regM" class="modal">
-    <div class="modal-content">
-        <h3>SIGN UP</h3>
-        <input id="rEm" type="email" placeholder="Email Address">
-        <input id="rP" type="password" placeholder="Password (min 6 chars)">
-        <button class="main-btn" onclick="handleAuth('up')">CREATE ACCOUNT</button>
-    </div>
-</div>
-
-<div id="logM" class="modal">
-    <div class="modal-content">
-        <h3>LOGIN</h3>
-        <input id="lEm" type="email" placeholder="Email Address">
-        <input id="lP" type="password" placeholder="Password">
-        <button class="main-btn" onclick="handleAuth('in')">LOGIN</button>
-    </div>
-</div>
-
-<div id="depM" class="modal">
-    <div class="modal-content">
-        <h3>DEPOSIT</h3>
-        <input type="number" id="dA" placeholder="Amount">
-        <p style="font-size: 0.7rem; color: #888;">Upload payment screenshot:</p>
-        <input type="file" id="dF">
-        <button class="main-btn" onclick="handleDeposit()">SUBMIT REQUEST</button>
-    </div>
-</div>
+<div id="regM" class="modal"><div class="modal-content"><h3>SIGN UP</h3><input id="rEm" type="email" placeholder="Email"><input id="rP" type="password" placeholder="Password"><button class="main-btn" onclick="handleAuth('up')">CREATE ACCOUNT</button></div></div>
+<div id="logM" class="modal"><div class="modal-content"><h3>LOGIN</h3><input id="lEm" type="email" placeholder="Email"><input id="lP" type="password" placeholder="Password"><button class="main-btn" onclick="handleAuth('in')">LOGIN</button></div></div>
+<div id="depM" class="modal"><div class="modal-content"><h3>DEPOSIT</h3><input type="number" id="dA" placeholder="Amount"><input type="file" id="dF"><button class="main-btn" onclick="handleDeposit()">SUBMIT PROOF</button></div></div>
 
 <script>
+    // INITIALIZE SUPABASE
     const _sb = supabase.createClient('https://nvcsmpfaxqfhidneiuqi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52Y3NtcGZheHFmaGlkbmVpdXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNTQwNzcsImV4cCI6MjA4ODYzMDA3N30.Xn77k7X2UGf3WuCDmFunIRybm0V4RbyCMPhs6zi6wvA');
     
-    const LADIES = [
-        {id:1,name:"Rihanna",img:"https://images.pexels.com/photos/2811088/pexels-photo-2811088.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:2,name:"Beyoncé",img:"https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:3,name:"Shakira",img:"https://images.pexels.com/photos/3767394/pexels-photo-3767394.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:4,name:"Nicki",img:"https://images.pexels.com/photos/2690323/pexels-photo-2690323.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:5,name:"Cardi B",img:"https://images.pexels.com/photos/2774197/pexels-photo-2774197.jpeg?auto=compress&cs=tinysrgb&w=150"},
-        {id:6,name:"Megan",img:"https://images.pexels.com/photos/2100063/pexels-photo-2100063.jpeg?auto=compress&cs=tinysrgb&w=150"}
-    ];
-
+    const LADIES = [{id:1,name:"Rihanna",img:"https://images.pexels.com/photos/2811088/pexels-photo-2811088.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:2,name:"Beyoncé",img:"https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:3,name:"Shakira",img:"https://images.pexels.com/photos/3767394/pexels-photo-3767394.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:4,name:"Nicki",img:"https://images.pexels.com/photos/2690323/pexels-photo-2690323.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:5,name:"Cardi B",img:"https://images.pexels.com/photos/2774197/pexels-photo-2774197.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:6,name:"Megan",img:"https://images.pexels.com/photos/2100063/pexels-photo-2100063.jpeg?auto=compress&cs=tinysrgb&w=150"}];
     let user = null, odds = {}, timer = 180;
 
     async function handleAuth(type) {
         const email = type === 'up' ? document.getElementById('rEm').value : document.getElementById('lEm').value;
         const pass = type === 'up' ? document.getElementById('rP').value : document.getElementById('lP').value;
-
-        const { data, error } = type === 'up' 
-            ? await _sb.auth.signUp({ email, password: pass }) 
-            : await _sb.auth.signInWithPassword({ email, password: pass });
-
-        if (error) alert(error.message); 
-        else { 
-            if(type === 'up') alert("Signup successful! Login to continue.");
-            checkUser(); 
-            closeM(); 
-        }
+        const { data, error } = type === 'up' ? await _sb.auth.signUp({ email, password: pass }) : await _sb.auth.signInWithPassword({ email, password: pass });
+        if (error) alert(error.message); else { checkUser(); closeM(); }
     }
 
     async function checkUser() {
@@ -134,12 +94,27 @@
             document.getElementById('uBal').innerText = parseFloat(user.balance).toFixed(2);
             document.getElementById('authBox').style.display = 'none';
             document.getElementById('userBox').style.display = 'block';
-            if (user.is_admin) document.getElementById('adminPanel').style.display = 'block';
-
-            _sb.channel('p').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` }, p => {
-                document.getElementById('uBal').innerText = parseFloat(p.new.balance).toFixed(2);
-            }).subscribe();
+            if (user.is_admin) { 
+                document.getElementById('adminPanel').style.display = 'block';
+                loadAdminData();
+            }
         }
+    }
+
+    async function loadAdminData() {
+        const { data: reqs } = await _sb.from('requests').select('*').eq('status', 'pending');
+        document.getElementById('adminReqList').innerHTML = reqs?.map(r => `
+            <div class="list-item">${r.email.split('@')[0]} - $${r.amount} 
+            <button onclick="approveDep('${r.id}','${r.profile_id}',${r.amount})" style="background:var(--neon); border:none; border-radius:4px; font-size:0.6rem; cursor:pointer;">OK</button></div>`).join('') || 'None';
+
+        const { data: users } = await _sb.from('profiles').select('*').order('balance', {ascending:false});
+        document.getElementById('adminUserList').innerHTML = users?.map(u => `
+            <div class="list-item" style="display:flex; justify-content:space-between"><span>${u.email.split('@')[0]}</span><span style="color:var(--neon)">$${u.balance}</span></div>`).join('');
+    }
+
+    async function approveDep(rid, pid, amt) {
+        const { error } = await _sb.rpc('admin_add_balance', { target_id: pid, amt: amt });
+        if (!error) { await _sb.from('requests').update({ status: 'completed' }).eq('id', rid); loadAdminData(); }
     }
 
     async function placeBet(lid, amt) {
@@ -152,18 +127,17 @@
         const winId = Math.floor(Math.random() * 6) + 1;
         await _sb.rpc('process_winner', { winning_lady_id: winId });
         alert("WINNER IS: " + LADIES.find(l => l.id === winId).name);
-        timer = 180; renderCards();
+        timer = 180; renderCards(); loadAdminData();
     }
 
     async function handleDeposit() {
         const amt = document.getElementById('dA').value;
         const file = document.getElementById('dF').files[0];
-        if (!file || !amt) return alert("Fill all fields!");
         const path = `proofs/${user.id}_${Date.now()}`;
         await _sb.storage.from('screenshots').upload(path, file);
         const { data: { publicUrl } } = _sb.storage.from('screenshots').getPublicUrl(path);
         await _sb.from('requests').insert([{ profile_id: user.id, email: user.email, amount: amt, proof_url: publicUrl }]);
-        alert("Deposit Request Sent!"); closeM();
+        alert("Sent! Wait for Admin."); closeM();
     }
 
     function renderCards() {
