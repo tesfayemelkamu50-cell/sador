@@ -1,102 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIZZY 6 • ROYAL PRO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #fbbf24; --neon: #22ff88; --ice: #38bdf8; --royal: #f43f5e; --panel: #11161e; --bg: #0a0c0f; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.2s; }
         body { margin: 0; background: var(--bg); color: #eee; height: 100vh; display: flex; flex-direction: column; padding: 10px; overflow: hidden; }
-        
-        /* Navigation & Sidebar */
         .top-bar { background: var(--panel); border-radius: 2rem; padding: 10px 25px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #2a303c; margin-bottom: 10px; }
         .timer { font-family: monospace; font-size: 1.8rem; font-weight: 800; color: var(--neon); border: 2px solid var(--neon); padding: 0 15px; border-radius: 20px; }
         .game-area { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .card-grid { flex: 1; background: #0b0e14; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
         .sidebar { width: 320px; background: #0c111a; border-radius: 20px; padding: 15px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #222; overflow-y: auto; }
-
-        /* Game Cards */
         .game-card { background: #10161e; border-radius: 12px; display: grid; grid-template-columns: 40px 60px 1fr 70px; align-items: center; height: 70px; position: relative; cursor: pointer; border: 1px solid #222; }
-        .card-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-left: 8px; border: 1px solid #333; }
+        .card-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-left: 8px; }
         .card-odds { font-size: 1.4rem; font-weight: 900; color: var(--gold); text-align: center; }
         .stake-panel { position: absolute; inset: 0; background: rgba(0,0,0,0.95); border-radius: 12px; display: none; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; z-index: 5; }
         .stake-btn { display: flex; align-items: center; justify-content: center; background: #222; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.8rem; }
-
-        /* Admin Dashboard */
         #adminPanel { background: #000; border: 1px solid var(--royal); border-radius: 12px; padding: 10px; display: none; margin-top: 10px; }
         .admin-nav { display: flex; gap: 2px; margin-bottom: 8px; }
-        .admin-nav button { flex: 1; background: #1a1a1a; color: #777; border: none; padding: 6px; font-size: 0.6rem; cursor: pointer; border-radius: 4px; }
+        .admin-nav button { flex: 1; background: #1a1a1a; color: #777; border: none; padding: 6px; font-size: 0.55rem; cursor: pointer; border-radius: 4px; }
         .admin-nav button.active { background: var(--royal); color: white; }
-        .admin-tab { display: none; max-height: 200px; overflow-y: auto; font-size: 0.7rem; border-top: 1px solid #222; padding-top: 5px; }
-        .item { padding: 5px 0; border-bottom: 1px solid #111; display: flex; justify-content: space-between; align-items: center; }
-
-        /* Modals */
+        .admin-tab { display: none; max-height: 200px; overflow-y: auto; font-size: 0.7rem; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 100; }
-        .modal-content { background: #111827; width: 320px; border-radius: 20px; padding: 25px; border: 1px solid var(--ice); }
+        .modal-content { background: #111827; width: 350px; border-radius: 20px; padding: 25px; border: 1px solid var(--ice); text-align: center; }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; background: #1f2a37; border: 1px solid #333; color: white; outline: none; }
         .main-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; background: var(--ice); color: #000; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+        .confetti { position: absolute; width: 8px; height: 8px; top: -10px; animation: fall 4s linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
     </style>
 </head>
 <body>
 
 <div class="top-bar">
     <div style="font-weight:900; color:var(--gold)">FIZZY 6 ROYAL</div>
-    <div class="timer" id="timerDisplay">03:00</div>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <button id="muteBtn" onclick="toggleMute()" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">🔊</button>
+        <button onclick="openM('helpM')" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">❓</button>
+        <div class="timer" id="timerDisplay">00:00</div>
+    </div>
 </div>
 
 <div class="game-area">
     <div class="card-grid" id="grid"></div>
     <div class="sidebar">
         <div style="text-align:center;">
-            <div id="uName" style="color:var(--ice); font-weight:bold; letter-spacing:1px;">GUEST</div>
-            <div id="uBal" style="font-size:2.5rem; font-weight:900; color:var(--neon)">0.00</div>
-            <div id="authBox">
-                <button class="main-btn" onclick="openM('regM')">SIGN UP</button>
-                <button class="main-btn" style="margin-top:5px; background:#333; color:#fff;" onclick="openM('logM')">LOGIN</button>
-            </div>
-            <div id="userBox" style="display:none; gap:5px; flex-direction:column;">
-                <div style="display:flex; gap:5px;">
-                    <button class="main-btn" style="background:var(--neon)" onclick="openM('depM')">DEPOSIT</button>
-                    <button class="main-btn" style="background:var(--royal); color:#fff;" onclick="openM('withM')">CASH OUT</button>
-                </div>
+            <div id="uName" style="color:var(--ice); font-weight:bold;">GUEST</div>
+            <div id="uBal" style="font-size:2.2rem; font-weight:900; color:var(--neon)">0.00</div>
+            <div id="authBox"><button class="main-btn" onclick="openM('regM')">SIGN UP</button><button class="main-btn" style="margin-top:5px; background:#333; color:#fff;" onclick="openM('logM')">LOGIN</button></div>
+            <div id="userBox" style="display:none; flex-direction:column; gap:5px;">
+                <div style="display:flex; gap:5px;"><button class="main-btn" style="background:var(--neon)" onclick="openM('depM')">DEPOSIT</button><button class="main-btn" style="background:var(--royal); color:#fff;" onclick="openM('withM')">CASH OUT</button></div>
                 <button class="main-btn" style="background:transparent; color:#555; font-size:0.7rem;" onclick="handleLogout()">LOGOUT</button>
             </div>
         </div>
-
         <div id="adminPanel">
             <h5 style="color:var(--royal); margin:0 0 10px 0; text-align:center;">👑 ADMIN DASHBOARD</h5>
             <button class="main-btn" onclick="triggerResult()" style="background:var(--gold); height:35px; margin-bottom:10px;">DRAW WINNER</button>
-            <div class="admin-nav">
-                <button id="btn-dep" class="active" onclick="showTab('dep')">DEPOSITS</button>
-                <button id="btn-with" onclick="showTab('with')">PAYOUTS</button>
-                <button id="btn-hist" onclick="showTab('hist')">LOGS</button>
-            </div>
-            <div id="tab-dep" class="admin-tab" style="display:block;"></div>
-            <div id="tab-with" class="admin-tab"></div>
-            <div id="tab-hist" class="admin-tab"></div>
+            <div class="admin-nav"><button id="btn-dep" class="active" onclick="showTab('dep')">DEPOSITS</button><button id="btn-with" onclick="showTab('with')">PAYOUTS</button><button id="btn-hist" onclick="showTab('hist')">LOGS</button></div>
+            <div id="tab-dep" class="admin-tab" style="display:block;"></div><div id="tab-with" class="admin-tab"></div><div id="tab-hist" class="admin-tab"></div>
         </div>
     </div>
+</div>
+
+<div id="winnerOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+    <div id="confetti-container" style="position:absolute; inset:0; pointer-events:none;"></div>
+    <h1 style="color:var(--gold); font-size:3rem; margin:0; letter-spacing:5px;">WINNER</h1>
+    <div id="winCircle" style="width:250px; height:250px; border-radius:50%; border:8px solid var(--neon); margin:20px 0; overflow:hidden;"><img id="winImg" src="" style="width:100%; height:100%; object-fit:cover;"></div>
+    <h2 id="winName" style="color:#fff; font-size:2rem; margin:0;">NAME</h2>
+    <button onclick="closeWinner()" style="margin-top:30px; background:none; border:1px solid #444; color:#666; padding:8px 20px; border-radius:20px; cursor:pointer;">CLOSE</button>
 </div>
 
 <div id="regM" class="modal"><div class="modal-content"><h3>SIGN UP</h3><input id="rEm" type="email" placeholder="Email"><input id="rP" type="password" placeholder="Password"><button class="main-btn" onclick="handleAuth('up')">CREATE</button></div></div>
 <div id="logM" class="modal"><div class="modal-content"><h3>LOGIN</h3><input id="lEm" type="email" placeholder="Email"><input id="lP" type="password" placeholder="Password"><button class="main-btn" onclick="handleAuth('in')">LOGIN</button></div></div>
 <div id="depM" class="modal"><div class="modal-content"><h3>DEPOSIT</h3><input id="dA" type="number" placeholder="Amount"><input type="file" id="dF"><button class="main-btn" onclick="handleDeposit()">SEND PROOF</button></div></div>
 <div id="withM" class="modal"><div class="modal-content"><h3>WITHDRAW</h3><input id="wA" type="number" placeholder="Amount"><input id="wM" type="text" placeholder="Bank/Wallet Info"><button class="main-btn" style="background:var(--royal); color:#fff;" onclick="handleWithdraw()">REQUEST</button></div></div>
+<div id="helpM" class="modal"><div class="modal-content"><h3>HOW TO PLAY</h3><p style="font-size:0.8rem; text-align:left; line-height:1.5;">1. Choose a lady and place a bet.<br>2. Timer is synced for all players.<br>3. Winners are paid instantly after draw.<br>4. Min withdrawal $20.</p><button class="main-btn" onclick="closeM()">GOT IT</button></div></div>
+
+<audio id="sndDrumroll" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3" preload="auto"></audio>
+<audio id="sndJackpot" src="https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3" preload="auto"></audio>
 
 <script>
     const _sb = supabase.createClient('https://nvcsmpfaxqfhidneiuqi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52Y3NtcGZheHFmaGlkbmVpdXFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNTQwNzcsImV4cCI6MjA4ODYzMDA3N30.Xn77k7X2UGf3WuCDmFunIRybm0V4RbyCMPhs6zi6wvA');
     const LADIES = [{id:1,name:"Rihanna",img:"https://images.pexels.com/photos/2811088/pexels-photo-2811088.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:2,name:"Beyoncé",img:"https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:3,name:"Shakira",img:"https://images.pexels.com/photos/3767394/pexels-photo-3767394.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:4,name:"Nicki",img:"https://images.pexels.com/photos/2690323/pexels-photo-2690323.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:5,name:"Cardi B",img:"https://images.pexels.com/photos/2774197/pexels-photo-2774197.jpeg?auto=compress&cs=tinysrgb&w=150"},{id:6,name:"Megan",img:"https://images.pexels.com/photos/2100063/pexels-photo-2100063.jpeg?auto=compress&cs=tinysrgb&w=150"}];
-    let user = null, odds = {}, timer = 180;
+    let user = null, odds = {}, isMuted = false;
 
+    // --- AUTH & USER ---
     async function handleAuth(type) {
-        const email = document.getElementById(type==='up'?'rEm':'lEm').value;
-        const pass = document.getElementById(type==='up'?'rP':'lP').value;
-        const { error } = type==='up' ? await _sb.auth.signUp({email, password:pass}) : await _sb.auth.signInWithPassword({email, password:pass});
+        const e = document.getElementById(type==='up'?'rEm':'lEm').value;
+        const p = document.getElementById(type==='up'?'rP':'lP').value;
+        const { error } = type==='up' ? await _sb.auth.signUp({email:e, password:p}) : await _sb.auth.signInWithPassword({email:e, password:p});
         if(error) alert(error.message); else { checkUser(); closeM(); }
     }
-
     async function checkUser() {
         const { data: { session } } = await _sb.auth.getSession();
         if (session) {
@@ -110,83 +106,72 @@
         }
     }
 
-    function showTab(t) {
-        document.querySelectorAll('.admin-tab').forEach(el=>el.style.display='none');
-        document.querySelectorAll('.admin-nav button').forEach(el=>el.classList.remove('active'));
-        document.getElementById('tab-'+t).style.display='block';
-        document.getElementById('btn-'+t).classList.add('active');
-        loadAdmin();
+    // --- SYNC TIMER ---
+    function syncTimer() {
+        const now = Math.floor(Date.now() / 1000), rem = 180 - (now % 180), m = Math.floor(rem/60), s = rem%60;
+        document.getElementById('timerDisplay').innerText = `${m}:${s<10?'0':''}${s}`;
+        if(rem <= 5) { document.getElementById('timerDisplay').style.animation="shake 0.2s infinite"; if(!isMuted) document.getElementById('sndDrumroll').play(); }
+        else document.getElementById('timerDisplay').style.animation="none";
+        if(rem === 180) { renderCards(); if(user?.is_admin) setTimeout(triggerResult, 1500); }
     }
+    setInterval(syncTimer, 1000);
 
-    async function loadAdmin() {
-        const { data: d } = await _sb.from('requests').select('*').eq('status','pending');
-        document.getElementById('tab-dep').innerHTML = d?.map(r => `<div class="item"><span>${r.email.split('@')[0]} (+$${r.amount})</span><button onclick="approveD('${r.id}','${r.profile_id}',${r.amount})" style="background:var(--neon); border:none; padding:2px 5px; border-radius:4px; cursor:pointer;">OK</button></div>`).join('') || 'None';
-        const { data: w } = await _sb.from('withdrawals').select('*').eq('status','pending');
-        document.getElementById('tab-with').innerHTML = w?.map(r => `<div class="item"><span>${r.email.split('@')[0]} (-$${r.amount})</span><button onclick="approveW('${r.id}')" style="background:var(--ice); border:none; padding:2px 5px; border-radius:4px; cursor:pointer;">PAID</button></div>`).join('') || 'None';
-        const { data: h } = await _sb.from('transaction_history').select('*').order('created_at',{ascending:false}).limit(10);
-        document.getElementById('tab-hist').innerHTML = h?.map(t => `<div class="item"><span>[${t.type}] ${t.email.split('@')[0]}</span> <span>$${t.amount}</span></div>`).join('');
-    }
-
-    async function approveD(rid, pid, amt) { await _sb.rpc('admin_add_balance', {target_id: pid, amt: amt}); await _sb.from('requests').update({status:'completed'}).eq('id',rid); loadAdmin(); checkUser(); }
-    async function approveW(rid) { await _sb.from('withdrawals').update({status:'completed'}).eq('id',rid); loadAdmin(); }
-
+    // --- GAMEPLAY ---
     async function placeBet(lid, amt) {
         if(!user) return openM('logM');
         const { error } = await _sb.rpc('place_bet_secure', { l_id: lid, l_odds: odds[lid], l_amt: amt });
-        if (error) alert(error.message); else { checkUser(); hideS(lid); }
+        if(error) alert(error.message); else { checkUser(); hideS(lid); }
     }
-
     async function triggerResult() {
-        const winId = Math.floor(Math.random() * 6) + 1;
+        const winId = Math.floor(Math.random()*6)+1, lady = LADIES.find(l=>l.id===winId);
         await _sb.rpc('process_winner', { winning_lady_id: winId });
-        alert("WINNER: " + LADIES.find(l=>l.id===winId).name);
-        timer = 180; renderCards(); checkUser(); loadAdmin();
+        showWinnerScreen(lady); checkUser(); loadAdmin();
+    }
+    function showWinnerScreen(lady) {
+        document.getElementById('winImg').src=lady.img; document.getElementById('winName').innerText=lady.name;
+        document.getElementById('winnerOverlay').style.display='flex';
+        if(!isMuted) { document.getElementById('sndJackpot').currentTime=0; document.getElementById('sndJackpot').play(); }
+        createConfetti(); setTimeout(closeWinner, 10000);
+    }
+    function createConfetti() {
+        const c = document.getElementById('confetti-container'); c.innerHTML='';
+        for(let i=0; i<50; i++) {
+            const d = document.createElement('div'); d.className='confetti'; d.style.left=Math.random()*100+'vw';
+            d.style.background=['#fbbf24','#22ff88','#38bdf8'][Math.floor(Math.random()*3)];
+            d.style.animationDelay=Math.random()*2+'s'; c.appendChild(d);
+        }
     }
 
-    async function handleDeposit() {
-        const amt = document.getElementById('dA').value, file = document.getElementById('dF').files[0];
-        const path = `proofs/${user.id}_${Date.now()}`;
-        await _sb.storage.from('screenshots').upload(path, file);
-        const { data: { publicUrl } } = _sb.storage.from('screenshots').getPublicUrl(path);
-        await _sb.from('requests').insert([{ profile_id: user.id, email: user.email, amount: amt, proof_url: publicUrl }]);
-        alert("Proof sent!"); closeM();
+    // --- ADMIN ---
+    async function loadAdmin() {
+        if(!user?.is_admin) return;
+        const { data:d } = await _sb.from('requests').select('*').eq('status','pending');
+        document.getElementById('tab-dep').innerHTML = d?.map(r=>`<div style="font-size:0.6rem; padding:5px; border-bottom:1px solid #222;">${r.email} ($${r.amount}) <button onclick="window.open('${r.proof_url}')">VIEW</button> <button onclick="approveD('${r.id}','${r.profile_id}',${r.amount})">OK</button></div>`).join('') || 'None';
+        const { data:w } = await _sb.from('withdrawals').select('*').eq('status','pending');
+        document.getElementById('tab-with').innerHTML = w?.map(r=>`<div style="font-size:0.6rem; padding:5px; border-bottom:1px solid #222;">${r.email} ($${r.amount}) <button onclick="approveW('${r.id}')">PAID</button></div>`).join('') || 'None';
     }
+    async function approveD(rid, pid, amt) { await _sb.rpc('admin_add_balance', {target_id: pid, amt: amt}); await _sb.from('requests').update({status:'completed'}).eq('id',rid); loadAdmin(); checkUser(); }
+    async function approveW(rid) { await _sb.from('withdrawals').update({status:'completed'}).eq('id',rid); loadAdmin(); }
+    function showTab(t) { document.querySelectorAll('.admin-tab').forEach(el=>el.style.display='none'); document.querySelectorAll('.admin-nav button').forEach(el=>el.classList.remove('active')); document.getElementById('tab-'+t).style.display='block'; document.getElementById('btn-'+t).classList.add('active'); loadAdmin(); }
 
-    async function handleWithdraw() {
-        const amt = parseFloat(document.getElementById('wA').value), det = document.getElementById('wM').value;
-        if(amt > user.balance) return alert("Insufficient balance");
-        await _sb.from('profiles').update({balance: user.balance - amt}).eq('id', user.id);
-        await _sb.from('withdrawals').insert([{ profile_id: user.id, email: user.email, amount: amt, method_details: det }]);
-        alert("Request sent!"); closeM(); checkUser();
-    }
-
+    // --- UI HELPERS ---
     function renderCards() {
-        let h = '';
-        LADIES.forEach(l => {
+        let h = ''; LADIES.forEach(l => {
             odds[l.id] = (Math.random() * 2 + 1.8).toFixed(1);
-            h += `<div class="game-card" onclick="showS(${l.id})">
-                <div style="font-size:0.6rem;text-align:center;color:#444">${l.id}</div>
-                <img src="${l.img}" class="card-img">
-                <div style="font-weight:bold; padding-left:10px">${l.name}</div>
-                <div class="card-odds">${odds[l.id]}</div>
-                <div class="stake-panel" id="s-${l.id}">
-                    <div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},10)">$10</div>
-                    <div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},50)">$50</div>
-                    <div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},100)">$100</div>
-                    <div class="stake-btn" onclick="event.stopPropagation();hideS(${l.id})" style="color:var(--royal)">X</div>
-                </div>
-            </div>`;
+            h += `<div class="game-card" onclick="showS(${l.id})"><div style="font-size:0.5rem;text-align:center;color:#444">${l.id}</div><img src="${l.img}" class="card-img"><div style="font-weight:bold; padding-left:10px; font-size:0.8rem">${l.name}</div><div class="card-odds">${odds[l.id]}</div><div class="stake-panel" id="s-${l.id}"><div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},10)">$10</div><div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},50)">$50</div><div class="stake-btn" onclick="event.stopPropagation();placeBet(${l.id},100)">$100</div><div class="stake-btn" onclick="event.stopPropagation();hideS(${l.id})" style="color:var(--royal)">X</div></div></div>`;
         });
         document.getElementById('grid').innerHTML = h;
     }
-
+    async function handleDeposit() { const a=document.getElementById('dA').value, f=document.getElementById('dF').files[0], p=`proofs/${Date.now()}`; await _sb.storage.from('screenshots').upload(p,f); const {data:{publicUrl}}=_sb.storage.from('screenshots').getPublicUrl(p); await _sb.from('requests').insert([{profile_id:user.id, email:user.email, amount:a, proof_url:publicUrl}]); alert("Sent!"); closeM(); }
+    async function handleWithdraw() { const a=document.getElementById('wA').value, m=document.getElementById('wM').value; if(a>user.balance) return alert("Low balance"); await _sb.from('profiles').update({balance:user.balance-a}).eq('id',user.id); await _sb.from('withdrawals').insert([{profile_id:user.id, email:user.email, amount:a, method_details:m}]); alert("Sent!"); closeM(); checkUser(); }
+    function toggleMute() { isMuted = !isMuted; document.getElementById('muteIcon').innerText = isMuted ? '🔇' : '🔊'; }
     function openM(id){ document.getElementById(id).style.display='flex'; }
     function closeM(){ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
     function showS(id){ document.getElementById('s-'+id).style.display='grid'; }
     function hideS(id){ document.getElementById('s-'+id).style.display='none'; }
+    function closeWinner(){ document.getElementById('winnerOverlay').style.display='none'; }
     async function handleLogout(){ await _sb.auth.signOut(); location.reload(); }
 
-    setInterval(() => { if(timer > 0) { timer--; let m=Math.floor(timer/60), s=timer%60; document.getElementById('timerDisplay').innerText = `${m}:${s<10?'0':''}${s}`; } }, 1000);
     renderCards(); checkUser();
 </script>
 </body>
